@@ -77,19 +77,19 @@ void setup() {
 
   while (!wifi_connected) {
     DBG("Waiting for WiFi connection");
+    wifiConnect();
     delay(1000);
   }
 
   if (wifi_connected) {
     if (cam_init_ok) {
       while (!getTimeStamp()) {
-        delay(1000);
+        delay(100);
       }
       DBG(TIME_STAMP);
       delay(1000);
       String fileName = TIME_STAMP + ".jpg";
       takePicture(fileName);
-      DBG("Taking picture now");
     }
   }
 
@@ -97,10 +97,8 @@ void setup() {
   DBG("Done");
   rtc_gpio_hold_en(GPIO_NUM_4);
   esp_sleep_enable_timer_wakeup(1 * 60e6);
-  esp_deep_sleep_start();  
-  
-  // digitalWrite(4, LOW);
-  // esp_deep_sleep(1 * 60e6); // Sleep for 5 minutes
+  esp_deep_sleep_start();
+
 }
 
 void loop() {}
