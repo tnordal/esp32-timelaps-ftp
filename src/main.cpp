@@ -16,7 +16,6 @@
 #include "./ftp.h"
 #include "./cam.h"
 
-
 // NTP server details
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
@@ -64,38 +63,27 @@ void setup() {
 
   // Initialize time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-}
 
-void loop() {
-
-  unsigned long current_millis = millis();
+  // Initialize camera
+  if (!cam_init_ok) {
+    cam_init_ok = cameraInit();
+    DBG("Camera init ok");
+  }
 
   if (wifi_connected) {
-    if (current_millis - send_timer >= SEND_INTERVAL) {
-      send_timer = current_millis;
-
-      if (!cam_init_ok) {
-        cam_init_ok = cameraInit();
-        DBG("Camera init ok");
-      }
-
-      if (cam_init_ok) {
-        while (!getTimeStamp()) {
-          delay(1000);
-        }
-        DBG(TIME_STAMP);
+    if (cam_init_ok) {
+      while (!getTimeStamp()) {
         delay(1000);
-        String fileName = TIME_STAMP + ".jpg";
-        takePicture(fileName);
-        DBG("Taking picture now");
       }
-    }
-  } else {
-    if (current_millis - connect_timer >= WIFI_CONNECT_INTERVAL) {
-      connect_timer = current_millis;
-      wifiConnect();
+      DBG(TIME_STAMP);
+      delay(1000);
+      String fileName = TIME_STAMP + ".jpg";
+      takePicture(fileName);
+      DBG("Taking picture now");
     }
   }
 
-  yield();
+  DBG("Done");
 }
+
+void loop() {}
