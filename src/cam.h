@@ -70,6 +70,7 @@ bool takePicture(String fileName) {
   }
 
   DBG("Camera capture success");
+  delay(100);
   uploadFile(fb->buf, fb->len, fileName.c_str());
 
   esp_camera_fb_return(fb);
