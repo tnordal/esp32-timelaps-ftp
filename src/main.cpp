@@ -1,6 +1,8 @@
 #include "Arduino.h"
 #include <WiFi.h>
 #include <time.h>
+#include <driver/rtc_io.h>
+
 // brownout
 #include "soc/rtc_cntl_reg.h"
 #include "soc/soc.h"
@@ -15,6 +17,7 @@
 #include "./connect.h"
 #include "./ftp.h"
 #include "./cam.h"
+
 
 // NTP server details
 const char *ntpServer = "pool.ntp.org";
@@ -51,10 +54,12 @@ void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
   pinMode(4, OUTPUT);
-  digitalWrite(4, LOW);
+  // digitalWrite(4, LOW);
+  rtc_gpio_hold_dis(GPIO_NUM_4);  
+
+  Serial.begin(115200);
 
 #ifdef SERIAL_DEBUG
-  Serial.begin(115200);
   Serial.setDebugOutput(true);
 #endif
 
@@ -70,6 +75,11 @@ void setup() {
     DBG("Camera init ok");
   }
 
+  while (!wifi_connected) {
+    DBG("Waiting for WiFi connection");
+    delay(1000);
+  }
+
   if (wifi_connected) {
     if (cam_init_ok) {
       while (!getTimeStamp()) {
@@ -83,7 +93,14 @@ void setup() {
     }
   }
 
+  // Go to deep sleep
   DBG("Done");
+  rtc_gpio_hold_en(GPIO_NUM_4);
+  esp_sleep_enable_timer_wakeup(1 * 60e6);
+  esp_deep_sleep_start();  
+  
+  // digitalWrite(4, LOW);
+  // esp_deep_sleep(1 * 60e6); // Sleep for 5 minutes
 }
 
 void loop() {}
